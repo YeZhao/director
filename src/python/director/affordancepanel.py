@@ -1,17 +1,19 @@
+import PythonQt
+from PythonQt import QtCore, QtGui, QtUiTools
 from director import applogic as app
+from director import visualization as vis
 from director.debugVis import DebugData
 from director import transformUtils
+from director.timercallback import TimerCallback
+from director.simpletimer import FPSCounter
 from director import objectmodel as om
 from director import affordanceitems
 from director import affordanceurdf
 from director.uuidutil import newUUID
+from director.actionhandlers import getDefaultDirectory
+
 import director.vtkAll as vtk
 import numpy as np
-
-import PythonQt
-from PythonQt import QtCore, QtGui, QtUiTools
-
-
 
 def addWidgetsToDict(widgets, d):
 
@@ -29,10 +31,11 @@ class WidgetDict(object):
 
 class AffordancePanel(object):
 
-    def __init__(self, view, affordanceManager, jointController=None, raycastDriver=None):
+    def __init__(self, view, affordanceManager, ikServer, jointController, raycastDriver):
 
         self.view = view
         self.affordanceManager = affordanceManager
+        self.ikServer = ikServer
         self.jointController = jointController
         self.raycastDriver = raycastDriver
 
@@ -51,33 +54,34 @@ class AffordancePanel(object):
         self.ui.spawnCapsuleButton.connect('clicked()', self.onSpawnCapsule)
         self.ui.spawnRingButton.connect('clicked()', self.onSpawnRing)
         self.ui.spawnMeshButton.connect('clicked()', self.onSpawnMesh)
+        self.ui.spawnFileButton.connect('clicked()', self.onSpawnVTP)
         self.ui.getRaycastTerrainButton.connect('clicked()', self.onGetRaycastTerrain)
-
-        if not self.raycastDriver:
-            self.ui.getRaycastTerrainButton.hide()
 
         self.eventFilter = PythonQt.dd.ddPythonEventFilter()
         self.ui.scrollArea.installEventFilter(self.eventFilter)
         self.eventFilter.addFilteredEventType(QtCore.QEvent.Resize)
         self.eventFilter.connect('handleEvent(QObject*, QEvent*)', self.onEvent)
 
+        self.updateTimer = TimerCallback(targetFps=30)
+        self.updateTimer.callback = self.updatePanel
+        self.updateTimer.start()
+
     def onEvent(self, obj, event):
         minSize = self.ui.scrollArea.widget().minimumSizeHint.width() + self.ui.scrollArea.verticalScrollBar().width
         self.ui.scrollArea.setMinimumWidth(minSize)
 
+    def updatePanel(self):
+        if not self.widget.isVisible():
+            return
+
     def getSpawnFrame(self):
-
-        if self.jointController:
-            # get spawn frame in front of robot
-            pos = self.jointController.q[:3]
-            rpy = np.degrees(self.jointController.q[3:6])
-            frame = transformUtils.frameFromPositionAndRPY(pos, rpy)
-            frame.PreMultiply()
-            frame.Translate(0.5, 0.0, 0.3)
-        else:
-            frame = vtk.vtkTransform()
-
+        pos = self.jointController.q[:3]
+        rpy = np.degrees(self.jointController.q[3:6])
+        frame = transformUtils.frameFromPositionAndRPY(pos, rpy)
+        frame.PreMultiply()
+        frame.Translate(0.5, 0.0, 0.3)
         return frame
+
 
     def onGetRaycastTerrain(self):
         affs = self.affordanceManager.getCollisionAffordances()
@@ -120,17 +124,33 @@ class AffordancePanel(object):
         desc = dict(classname='MeshAffordanceItem', Name='mesh', Filename=meshId, uuid=newUUID(), pose=pose)
         return self.affordanceManager.newAffordanceFromDescription(desc)
 
+    def onSpawnVTP(self):
+        mainWindow = app.getMainWindow()
+    
+        fileFilters = "Data Files (*.vtp)";
+        filename = QtGui.QFileDialog.getOpenFileName(mainWindow, "Open VTP file...", getDefaultDirectory(), fileFilters)
+        if not filename:
+            return
+
+        d = DebugData()
+        d.addMeshFromFile(filename)
+        pd = d.getPolyData()
+        meshId = affordanceitems.MeshAffordanceItem.getMeshManager().add(pd)
+
+        pose = transformUtils.poseFromTransform(self.getSpawnFrame())
+        desc = dict(classname='MeshAffordanceItem', Name='mesh', Filename=meshId, uuid=newUUID(), pose=pose)
+        return self.affordanceManager.newAffordanceFromDescription(desc)
+
 
 def _getAction():
     return None
 
-
-def init(view, affordanceManager, jointController, raycastDriver):
+def init(view, affordanceManager, ikServer, jointController, raycastDriver):
 
     global panel
     global dock
 
-    panel = AffordancePanel(view, affordanceManager, jointController, raycastDriver)
+    panel = AffordancePanel(view, affordanceManager, ikServer, jointController, raycastDriver)
     dock = app.addWidgetToDock(panel.widget, action=_getAction())
     dock.hide()
 

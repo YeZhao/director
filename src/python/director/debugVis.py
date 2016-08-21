@@ -14,6 +14,12 @@ class DebugData(object):
         writer.SetInputConnection(self.append.GetOutputPort())
         writer.SetFileName(filename)
         writer.Update()
+        
+    def addMeshFromFile(self, filepath):
+        reader = vtk.vtkXMLPolyDataReader()
+        reader.SetFileName(filepath)
+        reader.Update()
+        self.addPolyData(reader.GetOutput())
 
 
     def addPolyData(self, polyData, color=[1,1,1], extraLabels=None):
