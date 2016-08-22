@@ -113,10 +113,39 @@ class SceneLoader(object):
         link.find('visual/material/ambient').text = '0 0 0 1'
         
         return link
+    
+    def generateMeshLinkNode(self, mesh_file):
+        link = etree.Element('link', {'name': 'mesh_affordance'})
+        link.append(etree.Element('pose'))
+        link.find('pose').text = '0 0 0 0 0 0'
+        
+        link.append(etree.Element('collision', {'name': 'collision'}))
+        link.find('collision').append(etree.Element('geometry'))
+        link.find('collision/geometry').append(etree.Element('mesh'))
+        link.find('collision/geometry/mesh').append(etree.Element('uri'))
+        link.find('collision/geometry/mesh/uri').text = mesh_file
+        link.find('collision/geometry/mesh').append(etree.Element('scale'))
+        link.find('collision/geometry/mesh/scale').text = '1 1 1'
+        
+        link.append(etree.Element('visual', {'name': 'visual'}))
+        link.find('visual').append(etree.Element('geometry'))
+        link.find('visual/geometry').append(etree.Element('mesh'))
+        link.find('visual/geometry/mesh').append(etree.Element('uri'))
+        link.find('visual/geometry/mesh/uri').text = mesh_file
+        link.find('visual/geometry/mesh').append(etree.Element('scale'))
+        link.find('visual/geometry/mesh/scale').text = '1 1 1'
+        link.find('visual').append(etree.Element('material'))
+        link.find('visual/material').append(etree.Element('diffuse'))
+        link.find('visual/material/diffuse').text = '1 1 1 1'
+        link.find('visual/material').append(etree.Element('ambient'))
+        link.find('visual/material/ambient').text = '0 0 0 1'
+        
+        return link
         
                     
-    def generateSDFfromAffordances(self):
-        filename= os.environ['DRC_BASE'] + '/software/models/worlds/directorAffordances.sdf'
+    def generateSDFfromAffordances(self, filename = ''):
+        if not filename:
+            filename= os.environ['DRC_BASE'] + '/software/models/worlds/directorAffordances.sdf'
         sdfFile = open(filename, 'w')
         am = segmentation.affordanceManager
         affordances = am.getAffordances()
@@ -141,6 +170,27 @@ class SceneLoader(object):
                     model.append(self.generateCylinderLinkNode(aff))
             else:
                 print '{:s} is unsupported skipping {:s} affordance!'.format(aff.getDescription()['classname'], aff.getDescription()['Name'])
+        
+        tree.write(sdfFile)
+        sdfFile.close()
+        
+                    
+    def generateSDFfromDAE(self, mesh_file):
+        filename= os.environ['DRC_BASE'] + '/software/models/worlds/directorAffordances.sdf'
+        sdfFile = open(filename, 'w')
+        
+        root = etree.Element('sdf', {'version': '1.4'})
+        tree = etree.ElementTree(root)
+        world = etree.Element('world', {'name': 'directorAffordances'})
+        root.append(world)
+                
+        model = etree.Element('model', {'name': 'mesh_affordance'})
+        world.append(model)
+                
+        model.append(etree.Element('pose'))
+        model.find('pose').text = '0 0 0 0 0 0'
+        
+        model.append(self.generateMeshLinkNode(mesh_file))
         
         tree.write(sdfFile)
         sdfFile.close()
