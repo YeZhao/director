@@ -46,8 +46,6 @@ class SceneLoader(object):
                     print 'image geometry is unsupported - SKIPPING!'
                 if col.geometry_type=='height_map':
                     print 'Height map geometry is unsupported - SKIPPING!'
-                if col.geometry_type=='plane':
-                    print 'Plane geometry is unsupported - SKIPPING!'
                 if col.geometry_type=='sphere':
                     print 'Sphere geometry is unsupported - SKIPPING!'
                 if col.geometry_type=='box':
@@ -55,6 +53,9 @@ class SceneLoader(object):
                     self.affordanceManager.newAffordanceFromDescription(desc)
                 if col.geometry_type=='cylinder':
                     desc = dict(classname='CylinderAffordanceItem', Name=name, uuid=newUUID(), pose=p, Color=[0.8, 0.8, 0.8], Radius=float(col.geometry_data['radius']), Length = float(col.geometry_data['length']))
+                    self.affordanceManager.newAffordanceFromDescription(desc)
+                if col.geometry_type=='plane':
+                    desc = dict(classname='PlaneAffordanceItem', Name=name, uuid=newUUID(), pose=p, Color=[0.8, 0.8, 0.8], Dimensions=map(float, col.geometry_data['size'].split(' ')))
                     self.affordanceManager.newAffordanceFromDescription(desc)
     
     def generateBoxLinkNode(self, aff):
@@ -76,6 +77,37 @@ class SceneLoader(object):
         link.find('visual/geometry').append(etree.Element('box'))
         link.find('visual/geometry/box').append(etree.Element('size'))
         link.find('visual/geometry/box/size').text = ' '.join(map(str, dimensions))
+        link.find('visual').append(etree.Element('material'))
+        link.find('visual/material').append(etree.Element('diffuse'))
+        link.find('visual/material/diffuse').text = '{:s} {:.1f}'.format(' '.join(map(str, aff.getDescription()['Color'])), aff.getDescription()['Alpha'])
+        link.find('visual/material').append(etree.Element('ambient'))
+        link.find('visual/material/ambient').text = '0 0 0 1'
+        
+        return link
+    
+    def generatePlaneLinkNode(self, aff):
+        link = etree.Element('link', {'name':aff.getDescription()['Name']})
+        link.append(etree.Element('pose'))
+        pose = np.append(aff.getDescription()['pose'][0], transformUtils.quaternionToRollPitchYaw(aff.getDescription()['pose'][1]))
+        link.find('pose').text = ' '.join(map(str, pose))
+        dimensions = aff.getDescription()['Dimensions']
+        
+        if aff.getDescription()['Collision Enabled']:
+            link.append(etree.Element('collision', {'name': 'collision'}))
+            link.find('collision').append(etree.Element('geometry'))
+            link.find('collision/geometry').append(etree.Element('plane'))
+            link.find('collision/geometry/plane').append(etree.Element('size'))
+            link.find('collision/geometry/plane/size').text = ' '.join(map(str, dimensions))
+            link.find('collision/geometry/plane').append(etree.Element('normal'))
+            link.find('collision/geometry/plane/normal').text = '0 0 1'
+        
+        link.append(etree.Element('visual', {'name': 'visual'}))
+        link.find('visual').append(etree.Element('geometry'))
+        link.find('visual/geometry').append(etree.Element('plane'))
+        link.find('visual/geometry/plane').append(etree.Element('size'))
+        link.find('visual/geometry/plane/size').text = ' '.join(map(str, dimensions))
+        link.find('visual/geometry/plane').append(etree.Element('normal'))
+        link.find('visual/geometry/plane/normal').text = '0 0 1'
         link.find('visual').append(etree.Element('material'))
         link.find('visual/material').append(etree.Element('diffuse'))
         link.find('visual/material/diffuse').text = '{:s} {:.1f}'.format(' '.join(map(str, aff.getDescription()['Color'])), aff.getDescription()['Alpha'])
@@ -156,7 +188,7 @@ class SceneLoader(object):
         root.append(world)
         
         for aff in affordances:
-            if aff.getDescription()['classname'] in ['BoxAffordanceItem', 'CylinderAffordanceItem']:
+            if aff.getDescription()['classname'] in ['BoxAffordanceItem', 'CylinderAffordanceItem', 'PlaneAffordanceItem']:
                 
                 model = etree.Element('model', {'name': aff.getDescription()['Name']})
                 world.append(model)
@@ -168,6 +200,8 @@ class SceneLoader(object):
                     model.append(self.generateBoxLinkNode(aff))
                 elif aff.getDescription()['classname'] == 'CylinderAffordanceItem':
                     model.append(self.generateCylinderLinkNode(aff))
+                elif aff.getDescription()['classname'] == 'PlaneAffordanceItem':
+                    model.append(self.generatePlaneLinkNode(aff))
             else:
                 print '{:s} is unsupported skipping {:s} affordance!'.format(aff.getDescription()['classname'], aff.getDescription()['Name'])
         

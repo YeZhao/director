@@ -734,7 +734,7 @@ class LinkPart(SpatialEntity):
     super(LinkPart, self).__init__(**kwargs)
     self.geometry_type = None
     self.geometry_data = {}
-    self.gtypes = 'box', 'cylinder', 'sphere', 'mesh'
+    self.gtypes = 'box', 'cylinder', 'sphere', 'mesh', 'plane'
     if 'tree' in kwargs:
       self.from_tree(kwargs['tree'])
 
@@ -755,6 +755,8 @@ class LinkPart(SpatialEntity):
         self.geometry_type = gtype
         if gtype == 'box':
           self.geometry_data = {'size': get_tag(typenode, 'size')}
+        if gtype == 'plane':
+          self.geometry_data = {'size': get_tag(typenode, 'size'), 'normal': get_tag(typenode, 'normal')}
         elif gtype == 'cylinder':
           self.geometry_data = {'radius': get_tag(typenode, 'radius'), 'length': get_tag(typenode, 'length')}
         elif gtype == 'sphere':
@@ -775,6 +777,8 @@ class LinkPart(SpatialEntity):
     geometrynode = ET.SubElement(partnode, 'geometry')
     if self.geometry_type == 'box':
       boxnode = ET.SubElement(geometrynode, 'box', {'size': self.geometry_data['size']})
+    if self.geometry_type == 'plane':
+      planenode = ET.SubElement(geometrynode, 'plane', {'size': self.geometry_data['size'], 'normal': self.geometry_data['normal']})
     elif self.geometry_type == 'cylinder':
       cylindernode = ET.SubElement(geometrynode, 'cylinder', {'radius': self.geometry_data['radius'], 'length': self.geometry_data['length']})
     elif self.geometry_type == 'sphere':
