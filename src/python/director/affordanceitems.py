@@ -86,6 +86,26 @@ class AffordanceItem(PolyDataItem):
         PolyDataItem.onRemoveFromObjectModel(self)
 
 
+class PlaneAffordanceItem(AffordanceItem):
+
+    def __init__(self, name, view):
+        AffordanceItem.__init__(self, name, vtk.vtkPolyData(), view)
+        self.addProperty('Dimensions', [0.25, 0.25], attributes=om.PropertyAttributes(decimals=3, singleStep=0.01, minimum=0.0, maximum=1e4))
+        self.properties.setPropertyIndex('Dimensions', 0)
+        self.updateGeometryFromProperties()
+
+    def updateGeometryFromProperties(self):
+        d = DebugData()
+        d.addPlane(self.getProperty('Dimensions'), (0,0,0))
+        self.setPolyData(d.getPolyData())
+
+    def _onPropertyChanged(self, propertySet, propertyName):
+        AffordanceItem._onPropertyChanged(self, propertySet, propertyName)
+
+        if propertyName in ('Dimensions'):
+            self.updateGeometryFromProperties()
+
+
 class BoxAffordanceItem(AffordanceItem):
 
     def __init__(self, name, view):

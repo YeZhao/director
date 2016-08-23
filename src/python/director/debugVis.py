@@ -45,6 +45,19 @@ class DebugData(object):
 
         self.append.AddInput(polyData)
 
+    def addPlane(self, dimensions, center, color=[1,1,1]):
+
+        plane = vtk.vtkPlaneSource()
+        plane.SetOrigin(center)
+        plane.SetPoint1((dimensions[0], 0 , 0))
+        plane.SetPoint2((0, dimensions[1], 0))
+#        sphere.SetCenter(center)
+#        sphere.SetThetaResolution(resolution)
+#        sphere.SetPhiResolution(resolution)
+#        sphere.SetRadius(radius)
+        plane.Update()
+        self.addPolyData(plane.GetOutput(), color)
+
 
     def addLine(self, p1, p2, radius=0.0, color=[1,1,1]):
 

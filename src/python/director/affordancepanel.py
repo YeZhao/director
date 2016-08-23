@@ -54,6 +54,7 @@ class AffordancePanel(object):
         self.ui.spawnCapsuleButton.connect('clicked()', self.onSpawnCapsule)
         self.ui.spawnRingButton.connect('clicked()', self.onSpawnRing)
         self.ui.spawnMeshButton.connect('clicked()', self.onSpawnMesh)
+        self.ui.spawnPlaneButton.connect('clicked()', self.onSpawnPlane)
         self.ui.spawnFileButton.connect('clicked()', self.onSpawnVTP)
         self.ui.getRaycastTerrainButton.connect('clicked()', self.onGetRaycastTerrain)
 
@@ -122,6 +123,11 @@ class AffordancePanel(object):
 
         pose = transformUtils.poseFromTransform(self.getSpawnFrame())
         desc = dict(classname='MeshAffordanceItem', Name='mesh', Filename=meshId, uuid=newUUID(), pose=pose)
+        return self.affordanceManager.newAffordanceFromDescription(desc)
+
+    def onSpawnPlane(self):
+        pose = transformUtils.poseFromTransform(self.getSpawnFrame())
+        desc = dict(classname='PlaneAffordanceItem', Name='plane', uuid=newUUID(), pose=pose)
         return self.affordanceManager.newAffordanceFromDescription(desc)
 
     def onSpawnVTP(self):

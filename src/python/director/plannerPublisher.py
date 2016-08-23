@@ -129,7 +129,7 @@ class PlannerPublisher(object):
         if classname=='CylinderAffordanceItem' or classname=='CapsuleAffordanceItem':
           s+=',"radius":'+repr(des['Radius'])
           s+=',"length":'+repr(des['Length'])
-        if classname=='BoxAffordanceItem':
+        if classname=='BoxAffordanceItem' or classname=='PlaneAffordanceItem':
           s+=',"dimensions":'+repr(des['Dimensions'])
         if classname=='CapsuleRingAffordanceItem':
           s+=',"radius":'+repr(des['Radius'])
