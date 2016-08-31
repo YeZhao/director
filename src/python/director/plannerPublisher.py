@@ -15,6 +15,7 @@ import json
 from director.utime import getUtime
 from director import lcmUtils
 from director import robotstate
+from director import objectmodel as om
 
 
 class PlannerPublisher(object):
@@ -47,12 +48,20 @@ class PlannerPublisher(object):
     msg.end_pose = endPoseName
     msg.joint_names = json.dumps(list(self.ikPlanner.jointController.jointNames))
     msg.affordances = self.processAffordances()
+    msg.pelvis_pose = self.processPelvisPose()
     opt=ikplanner.getIkOptions()._properties
     if additionalTimeSamples:
       opt.update({'timeSamples':additionalTimeSamples})
     opt['jointLimits']=self.jointLimits
     msg.options = json.dumps(opt)
     return msg
+
+  def processPelvisPose(self):
+    frame = om.findObjectByName('pelvis frame').transform 
+    string = '[{}, {}, {},'.format(*frame.GetPosition())
+    string += ' {}, {}, {}]'.format(*frame.GetOrientation())
+    print 'processing pelvis pose: ', string
+    return string
 
   def processIK(self, constraints, endPoseName="", nominalPoseName="", seedPoseName="", additionalTimeSamples=None):
     listener = self.ikPlanner.getManipIKListener()

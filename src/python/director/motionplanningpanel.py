@@ -104,6 +104,7 @@ class MotionPlanningPanel(object):
             self.ui.walkingPlanningPanel.setEnabled(False)
             self.ui.fixFeetPlanningPanel.setEnabled(True)
         self.createHandGoalFrame()
+        self.createPelvisFrame()
         self.updateIKConstraints()
         
     def deactivate(self):
@@ -300,6 +301,14 @@ class MotionPlanningPanel(object):
             graspToWorld = self.ikPlanner.newGraspToWorldFrame(startPose, side, graspToHand)
             frame = vis.showFrame(graspToWorld, frameName, parent=folder, scale=0.2)
             frame.connectFrameModified(self.onGoalFrameModified)
+            
+    def createPelvisFrame(self):
+        folder = self.getConstraintFrameFolder()
+        frame = vis.showFrame(self.ikPlanner.robotModel.getLinkFrame('pelvis'), 'pelvis frame', parent=folder, scale=0.2)
+        frame.connectFrameModified(self.onPelvisFrameModified)
+        
+    def onPelvisFrameModified(self, frame):
+        print frame.transform.GetPosition(), frame.transform.GetOrientation()
         
     def updateIk(self):
         if not self.constraintSet:
