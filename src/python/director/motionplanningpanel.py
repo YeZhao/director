@@ -305,10 +305,7 @@ class MotionPlanningPanel(object):
     def createPelvisFrame(self):
         folder = self.getConstraintFrameFolder()
         frame = vis.showFrame(self.ikPlanner.robotModel.getLinkFrame('pelvis'), 'pelvis frame', parent=folder, scale=0.2)
-        frame.connectFrameModified(self.onPelvisFrameModified)
-        
-    def onPelvisFrameModified(self, frame):
-        print frame.transform.GetPosition(), frame.transform.GetOrientation()
+        frame.connectFrameModified(self.onGoalFrameModified)
         
     def updateIk(self):
         if not self.constraintSet:
