@@ -60,7 +60,6 @@ class PlannerPublisher(object):
     frame = om.findObjectByName('pelvis frame').transform 
     string = '[{}, {}, {},'.format(*frame.GetPosition())
     string += ' {}, {}, {}]'.format(*frame.GetOrientation())
-    print 'processing pelvis pose: ', string
     return string
 
   def processIK(self, constraints, endPoseName="", nominalPoseName="", seedPoseName="", additionalTimeSamples=None):
