@@ -61,6 +61,8 @@ class MotionPlanningPanel(object):
         self.widget = loader.load(uifile)
         self.ui = WidgetDict(self.widget.children())
         
+        self.subscriber = lcmUtils.addSubscriber('AFFORDANCE_COLLECTION_COMMAND', lcmdrc.affordance_collection_t, self.onGoalFrameModified)
+        
         # Check motion planning mode
         self.ui.mpModeButton.connect('clicked()', self.onMotionPlanningMode)
 
