@@ -42,6 +42,9 @@ class PlannerPublisher(object):
     msg = lcmdrc.exotica_planner_request_t()
     msg.utime = getUtime()
     msg.poses = json.dumps(poses)
+    qs_constraint = next((c for c in constraints if isinstance(c, ikconstraints.QuasiStaticConstraint)), None)
+    if qs_constraint:
+        qs_constraint.shrinkFactor = om.findObjectByName('IK Planner Options').getProperty('Quasistatic shrink factor')
     msg.constraints = ikconstraintencoder.encodeConstraints(constraints)
     msg.seed_pose = seedPoseName
     msg.nominal_pose = nominalPoseName
