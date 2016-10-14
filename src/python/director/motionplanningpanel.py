@@ -13,6 +13,7 @@ from director import drcargs
 from director import affordanceurdf
 from director.roboturdf import HandFactory
 from director import lcmUtils
+import drc as lcmdrc
 
 import functools
 import math
