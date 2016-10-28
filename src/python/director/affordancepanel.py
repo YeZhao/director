@@ -79,6 +79,7 @@ class AffordancePanel(object):
             frame.Translate(0.5, 0.0, 0.3)
         else:
             frame = vtk.vtkTransform()
+        return frame
 
     def onGetRaycastTerrain(self):
         affs = self.affordanceManager.getCollisionAffordances()
