@@ -51,7 +51,6 @@ class PlannerPublisher(object):
     msg.end_pose = endPoseName
     msg.joint_names = json.dumps(list(self.ikPlanner.jointController.jointNames))
     msg.affordances = self.processAffordances()
-    msg.pelvis_pose = self.processPelvisPose()
     opt=ikplanner.getIkOptions()._properties
     if additionalTimeSamples:
       opt.update({'timeSamples':additionalTimeSamples})
@@ -59,12 +58,6 @@ class PlannerPublisher(object):
     msg.options = json.dumps(opt)
     del opt['jointLimits']
     return msg
-
-  def processPelvisPose(self):
-    frame = om.findObjectByName('pelvis frame').transform 
-    string = '[{}, {}, {},'.format(*frame.GetPosition())
-    string += ' {}, {}, {}]'.format(*frame.GetOrientation())
-    return string
 
   def processIK(self, constraints, endPoseName="", nominalPoseName="", seedPoseName="", additionalTimeSamples=None):
     listener = self.ikPlanner.getManipIKListener()
